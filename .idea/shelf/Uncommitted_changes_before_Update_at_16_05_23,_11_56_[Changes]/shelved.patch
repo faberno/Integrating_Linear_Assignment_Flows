@@ -1,0 +1,55 @@
+Index: README.md
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><div align=\"center\">\n  <h3 align=\"center\">Bachelor Thesis</h3>\n\n  <p align=\"center\">\n    Comparison of Methods for Integrating Linear Assignment Flows\n    <br />\n    <!-- <a href=\"https://github.com/othneildrew/Best-README-Template\"><strong>Explore the docs »</strong></a>\n    <br />\n    <br />\n    <a href=\"https://github.com/othneildrew/Best-README-Template\">View Demo</a>\n    ·\n    <a href=\"https://github.com/othneildrew/Best-README-Template/issues\">Report Bug</a>\n    ·\n    <a href=\"https://github.com/othneildrew/Best-README-Template/issues\">Request Feature</a>\n    -->  \n</p>\n</div>\n\n## About The Project\n\nThe objective of this thesis is to evaluate the error and time complexity of both the\nExplicit Euler Method and the Krylov Subspace Method, depending on their respective\nparameters _step_ _size_ and _subspace_ _dimension_, so we can assess their performance in a\ndirect comparison.\n\n## Background\nThis section will cover the background of the thesis very briefly. For more information, be sure to take a look at the full document.\n### Linear Assignment Flow\nThe Linear Assignment Flow (Zeilmann et al., 2020) is represented by an ODE on the\ntangent space\n```math\n\\mathcal{T}_0 = \\{T \\in \\mathbb{R}^{I\\times J}: T\\mathbb{1}=\\mathbb{0}\\}\n``` \nat the barycenter of the assignment Manifold\n```math\n\\mathcal{W}=\\{W \\in \\mathbb{R}^{I\\times J}: W_{i,j} > 0, W\\mathbb{1}=\\mathbb{1}\\}\n``` \nmeaning that every row of $W\\in \\mathcal{W}$ represents a pixel and every column a label. The\nresulting entries then represent the probability of pixel $i$ being mapped to label $j$, so\nthat every row sums up to 1.\nIt is represented by an ODE of the form\n```math\n\\dot V(t) = A\\:V(t)+b, \\quad V(0)=0\\in \\mathbb{R}^{IJ}\n``` \nwhere \n* $V(t) \\in \\mathcal{T}_0$ is our tangent vector \n* $A \\in \\mathbb{R}^{IJ\\times IJ}$ represents the weights in pixel neighborhood\n* $b \\in \\mathbb{R}^{IJ}$ carries the image data\n\nFor a standard sized image of $500\\times500$ pixels and 5 prototypes, the system will result\nin the dimension\n```math\n\\mathbb{R}^{1\\,250\\,000} = \\mathbb{R}^{1\\,250\\,000\\times 1\\,250\\,000} \\cdot \\mathbb{R}^{1\\,250\\,000}\n```\nso sparse matrix representations have to be used.\n\n### Matrix Exponential and φ-Functions\nFor a matrix $A \\in \\mathbb{R}^{n\\times n}$ we define the matrix exponential to be the $n\\times n$ matrix\n```math\ne^{A}=\\sum_{j=0}^{\\infty}\\frac{A^{j}}{j!}.\n```\nThe φ-Functions represent special cases of the Mittag-Leffler Function and have the form\n```math\n\\varphi_{0}(z) = e^{A},\\quad \\varphi_{1}(A) = \\frac{e^{A}-\\mathbb{I}}{A}, \\quad \\varphi_{p}(A)=\\sum_{k=0}^{\\infty}\\frac{A^k}{(k+p)!}, \\: \\forall p \\in \\mathbb{N}_0.\n```\n\nThe solution of an inhomogeneous ODE is given by\n```math\nx(t) = \\varphi_{0}(tA)x_{0}+t\\cdot \\varphi_{1}(tA)\\cdot b\n```\nrespectively\n```math\nx(t) = t\\cdot \\varphi_{1}(tA)\\cdot b\n```\nif $x_0=0$.\n### Explicit Euler Method\nThe Explicit Euler Method (also called ”forward Euler“) is the most basic method to solve an ODE.\nIt is calculated iteratively by\n```math\nx_{n+1} = x_n + (Ax_n + b)h.\n```\nwhere $h$ is a step size.\n### Krylov Subspace Method\nThe Krylov Subspace Method (Niesen and Wright, 2012, pp. 4-6) is a more advanced method than the Explicit Euler Method. It tries to approximate $\\varphi_p(A)x$ which lives in $\\mathbb{R}^n$ by using the Krylov Subspace\n```math\n\\mathcal{K}_m(A, x) = span\\{x, Ax, A^2x, \\ldots, A^{m-1}x\\}, \\quad m \\leq n. \n```\nBy orthonormalizing it, we get \n```math\n\\mathcal{K}_m(A, x) = span\\{v_1, v_2, \\ldots, v_m\\}.\n```\nThese basis vectors combined, form the matrix $V_m \\in \\mathbb{R}^{n\\times m}$ such that\n```math\nAV_m = V_mH_m + h_{m, m+1}v_{m+1}e_m^T\n```\nrespectively\n```math\nH_m = V_m^TAV_m, \\quad A \\approx V_mH_mV_m^T\n```\nwhere $e_m$ is a vector in the standard basis and $H_m$ is a small Hessenberg matrix $\\in \\mathbb{R}^{m\\times m}.$\nApproximating $A$ in this way is very useful to calculate the the $\\varphi$-Funtions, because\n```math\n\\varphi_p(A)x \\approx \\varphi_p(V_mH_mV_m^T)x = V_m\\varphi_p(H_m)V_m^Tx,\n```\nso the matrix exponential does not have to be calculated on a very big matrix anymore, but instead one of size $m\\times m$.\n\n## References\n* Zeilmann, A., Savarino, F., Petra, S., and Schnörr, C. (2020). Geometric numerical\nintegration of the assignment flow. Inverse Problems</br>\n* Niesen, J. and Wright, W. M. (2012). Algorithm 919. ACM Transactions on Mathematical Software\n\n## License\nDistributed under the MIT License. See `LICENSE.txt` for more information.\n\n<p align=\"right\">(<a href=\"#readme-top\">back to top</a>)</p>\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/README.md b/README.md
+--- a/README.md	(revision 0328175971bf35afce0a9e82ff146648a992c0b3)
++++ b/README.md	(date 1684226321286)
+@@ -43,7 +43,8 @@
+ \dot V(t) = A\:V(t)+b, \quad V(0)=0\in \mathbb{R}^{IJ}
+ ``` 
+ where 
+-* $V(t) \in \mathcal{T}_0$ is our tangent vector 
++* $V(t) \in \mathcal{T}_0$ is our tangent vector
++  <img src="figures/tangent_vector.pdf"/>
+ * $A \in \mathbb{R}^{IJ\times IJ}$ represents the weights in pixel neighborhood
+ * $b \in \mathbb{R}^{IJ}$ carries the image data
+ 
+Index: euler/__init__.py
+===================================================================
+diff --git a/euler/__init__.py b/euler/__init__.py
+deleted file mode 100644
+--- a/euler/__init__.py	(revision 0328175971bf35afce0a9e82ff146648a992c0b3)
++++ /dev/null	(revision 0328175971bf35afce0a9e82ff146648a992c0b3)
+@@ -1,1 +0,0 @@
+-from .euler import Euler
+Index: krylov/__init__.py
+===================================================================
+diff --git a/krylov/__init__.py b/krylov/__init__.py
+deleted file mode 100644
+--- a/krylov/__init__.py	(revision 0328175971bf35afce0a9e82ff146648a992c0b3)
++++ /dev/null	(revision 0328175971bf35afce0a9e82ff146648a992c0b3)
+@@ -1,1 +0,0 @@
+-# from .krylov import
+\ No newline at end of file
+Index: laf/__init__.py
+===================================================================
+diff --git a/laf/__init__.py b/laf/__init__.py
+deleted file mode 100644
+--- a/laf/__init__.py	(revision 0328175971bf35afce0a9e82ff146648a992c0b3)
++++ /dev/null	(revision 0328175971bf35afce0a9e82ff146648a992c0b3)
+@@ -1,1 +0,0 @@
+-from .laf import LinearAssignmentFlow
+\ No newline at end of file
+diff --git a/krylov/krylov.py b/krylov.py
+rename from krylov/krylov.py
+rename to krylov.py
+diff --git a/laf/laf.py b/laf.py
+rename from laf/laf.py
+rename to laf.py
+diff --git a/euler/euler.py b/euler.py
+rename from euler/euler.py
+rename to euler.py
