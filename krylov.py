@@ -52,11 +52,15 @@ class Krylov:
             H_[m + k, m + 1 + k] = 1
         return H_
 
-    def __call__(self, x0: np.ndarray, m: int, distances: List[float], labels_out: bool = False):
+    def __call__(self, x0: np.ndarray, m: int, distances: List[float], err_correction: bool = True, err_approx: int = 0,
+                 save_calls: bool = True, labels_out: bool = False):
         """ Forward Step
         :param x0: initial value
         :param m: Krylov subspace dimension
         :param distances: List of distances that should be integrated up to
+        :param err_correction: should output be corrected by first error term
+        :param err_approx: number of error terms to approximate up to (0...)
+        :param save_calls: save parameters, results, ... in a dict for every call
         :param labels_out: only return indices of the largest valued labels
         :return: List of flattened images for all distances
         """
@@ -64,29 +68,59 @@ class Krylov:
         V, H, h_err, v_err = self._lanczos(m)  # orthonormalization
 
         results = []
-        for t in distances:
+        approx_list = []
+        err_approx += err_correction  # increase by one if true
+        for t in distances:  # start a new run for every distance
+            p = err_approx + 1  # basic -> p=1, corrected -> p=2, +1 for every error approximation
             Ht = H * t  # evaluate at time t
-            p = 1
             Ht_ = self._augment_H(Ht, p)
             phi_H = expm(Ht_)
             phi_e = phi_H[0:m, [-p]]  # last col yields phi_p(H)*e_1
 
-            img = t * (V @ phi_e) * np.linalg.norm(self.b)
+            beta = np.linalg.norm(self.b)
+            img = t * (V @ phi_e) * beta
             if np.count_nonzero(x0) != 0:
                 phi_0_e = phi_H[0:m, [1]]
                 img += (V @ phi_0_e) * np.linalg.norm(x0)
+            if err_correction:  # correct image
+                phi = phi_H[m-1, -err_approx]
+                err = t * t * beta * h_err * phi * v_err
+                img += err
+
+            approx = None
+            if err_approx > 0:
+                if not err_correction:  # in first step no additional A is needed
+                    phi = phi_H[m-1, -err_approx]
+                    error = beta * h_err * t * t * phi * v_err
+                    approx = [error.copy()]
+                else:  # an additional A multiplication is needed -> do that in loop
+                    error = np.zeros_like(v_err)
+                    approx = []
+                if err_approx > 1:
+                    A_ = self.A
+                    for i in range(3, 2 + err_approx):
+                        phi = phi_H[m-1, -err_approx + i - 2]
+                        error += beta * h_err * (t ** i) * phi * (A_ @ v_err)
+                        approx.append(error.copy())
+                        if i != (err_approx + 1): # not needed in last step
+                            A_ = A_ @ self.A
+                    approx = np.linalg.norm(approx, axis=1).squeeze()
             # img = img.reshape(self.img_dim[:2] + (-1,))
             if labels_out:
                 img = np.argmax(img, axis=2)
             results.append(img)
+            if save_calls:
+                approx_list.append(approx)
 
-        call = {
-            'x0': x0,
-            'm': m,
-            'distances': distances,
-            'results': results,
-            'times': np.asarray([time() - t0])
-        }
-        self.calls.append(call)
+        if save_calls:
+            call = {
+                'x0': x0,
+                'm': m,
+                'distances': distances,
+                'results': results,
+                'approx': approx_list,
+                'times': np.asarray([time() - t0])
+            }
+            self.calls.append(call)
 
         return results
